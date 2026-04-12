@@ -1,0 +1,61 @@
+const UserService = require('../services/userService');
+const ResponseUtil = require('../utils/response');
+
+/**
+ * 用户控制器
+ * 处理用户信息相关的请求
+ */
+class UserController {
+    /**
+     * 获取当前用户信息
+     * GET /api/user/profile
+     */
+    static async getProfile(ctx) {
+        const { userId } = ctx.state.user;
+        const user = await UserService.getUserInfo(userId);
+        ResponseUtil.success(ctx, user);
+    }
+
+    /**
+     * 更新昵称
+     * PUT /api/user/nickname
+     */
+    static async updateNickname(ctx) {
+        const { userId } = ctx.state.user;
+        const { nickname } = ctx.request.body;
+
+        const user = await UserService.updateNickname(userId, nickname);
+        ResponseUtil.success(ctx, user, '昵称修改成功');
+    }
+
+    /**
+     * 更新头像
+     * PUT /api/user/avatar
+     */
+    static async updateAvatar(ctx) {
+        const { userId } = ctx.state.user;
+        const { avatar } = ctx.request.body;
+
+        if (!avatar) {
+            ResponseUtil.badRequest(ctx, '头像数据不能为空');
+            return;
+        }
+
+        const user = await UserService.updateAvatar(userId, avatar);
+        ResponseUtil.success(ctx, user, '头像更新成功');
+    }
+
+    /**
+     * 修改密码
+     * PUT /api/user/password
+     */
+    static async updatePassword(ctx) {
+        const { userId } = ctx.state.user;
+        const { oldPassword, newPassword } = ctx.request.body;
+
+        await UserService.updatePassword(userId, oldPassword, newPassword);
+        ResponseUtil.success(ctx, null, '密码修改成功');
+    }
+}
+
+module.exports = UserController;

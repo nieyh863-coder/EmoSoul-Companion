@@ -1,0 +1,86 @@
+/* 头像裁剪器样式 */
+.avatar-cropper-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.avatar-cropper-modal {
+    background: white;
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.avatar-cropper-modal h3 {
+    padding: 20px;
+    margin: 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.cropper-container {
+    padding: 20px;
+}
+
+.cropper-container .cropper-view-box,
+.cropper-container .cropper-face {
+    border-radius: 50%;
+}
+
+.cropper-container .cropper-point {
+    background-color: var(--primary-color);
+}
+
+.cropper-container .cropper-line {
+    background-color: var(--primary-color);
+}
+
+.cropper-tips {
+    padding: 0 20px 10px;
+    text-align: center;
+}
+
+.cropper-tips p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.cropper-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.cropper-actions .btn {
+    padding: 10px 24px;
+    font-size: 14px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .avatar-cropper-modal {
+        max-width: 100%;
+        max-height: 95vh;
+    }
+
+    .cropper-container {
+        padding: 10px;
+    }
+
+    .cropper-actions {
+        padding: 15px;
+    }
+}

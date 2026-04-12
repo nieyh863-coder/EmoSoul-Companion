@@ -1,0 +1,158 @@
+/* 注册页面样式 */
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FAE8FF 0%, #FDF4FF 50%, #F5D0FE 100%);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-container {
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  z-index: 1;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.register-header h1 {
+  font-size: 36px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.register-header p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.register-card {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 40px;
+  box-shadow: 0 20px 60px rgba(139, 92, 246, 0.15);
+}
+
+.register-card h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.register-subtitle {
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.register-btn {
+  margin-top: 8px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.register-footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.register-footer a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register-footer a:hover {
+  text-decoration: underline;
+}
+
+/* 装饰元素 */
+.register-decoration {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floating-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: float 6s ease-in-out infinite;
+}
+
+.register-decoration .shape-1 {
+  width: 280px;
+  height: 280px;
+  background: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
+  top: -80px;
+  left: -80px;
+  animation-delay: 0s;
+}
+
+.register-decoration .shape-2 {
+  width: 180px;
+  height: 180px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  bottom: -40px;
+  right: -40px;
+  animation-delay: 2s;
+}
+
+.register-decoration .shape-3 {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+  top: 40%;
+  left: 8%;
+  animation-delay: 4s;
+}
+
+/* 响应式 */
+@media (max-width: 480px) {
+  .register-card {
+    padding: 24px 20px;
+  }
+  
+  .register-header h1 {
+    font-size: 28px;
+  }
+  
+  .register-form {
+    gap: 12px;
+  }
+}
