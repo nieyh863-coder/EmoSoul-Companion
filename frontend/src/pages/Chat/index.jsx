@@ -2,11 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import DigitalAvatar from '../../components/DigitalAvatar';
+import Live2DAvatar from '../../components/Live2DAvatar';
 import ChatMessage from '../../components/ChatMessage';
 import { chatApi } from '../../services/chatService';
 import { useChatStore } from '../../store/chatStore';
 import useThemeStore from '../../store/themeStore';
 import { COMPANION_STATUSES, getCompanionStatusById } from '../../constants/companionStatus';
+import { CHAT_MODES, CHAT_MODE_LIST } from '../../constants/chatModes';
+import { useCamera } from '../../hooks/useCamera';
 import './chat.css';
 
 // 引入图标字体
@@ -40,9 +43,16 @@ const Chat = () => {
   } = useChatStore();
 
   const [inputMessage, setInputMessage] = useState('');
+  const [live2dFailed, setLive2dFailed] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const [latestAdvice, setLatestAdvice] = useState(null);
+  const [showModePanel, setShowModePanel] = useState(false);
   const statusPickerRef = useRef(null);
+  const modePanelRef = useRef(null);
+
+  // 摄像头 hook
+  const { isEnabled: cameraEnabled, latestFrame, error: cameraError, toggleCamera, videoRef, canvasRef } = useCamera(5000);
 
   // 从全局主题状态获取
   const { darkMode, toggleDarkMode } = useThemeStore();
@@ -51,14 +61,16 @@ const Chat = () => {
 
   useEffect(() => {
     const onPointerDown = (e) => {
-      if (!statusMenuOpen) return;
-      if (statusPickerRef.current && !statusPickerRef.current.contains(e.target)) {
+      if (statusMenuOpen && statusPickerRef.current && !statusPickerRef.current.contains(e.target)) {
         setStatusMenuOpen(false);
+      }
+      if (showModePanel && modePanelRef.current && !modePanelRef.current.contains(e.target)) {
+        setShowModePanel(false);
       }
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [statusMenuOpen]);
+  }, [statusMenuOpen, showModePanel]);
 
   // 滚动到底部
   const scrollToBottom = () => {
@@ -142,7 +154,7 @@ const Chat = () => {
     });
 
     try {
-      const result = await chatApi.sendMessage(messageText, chatMode);
+      const result = await chatApi.sendMessage(messageText, cameraEnabled ? latestFrame : null, chatMode);
       if (result.code === 200) {
         // 更新消息，添加AI回复
         updateMessageResponse(
@@ -151,6 +163,12 @@ const Chat = () => {
           result.data.emotion
         );
         setEmotion(result.data.emotion);
+        // 处理情绪建议
+        if (result.data.emotion_advice) {
+          setLatestAdvice(result.data.emotion_advice);
+          // 10秒后自动消失
+          setTimeout(() => setLatestAdvice(null), 10000);
+        }
         setIsTyping(false);
       }
     } catch (error) {
@@ -182,6 +200,17 @@ const Chat = () => {
 
   return (
     <div className={`home-page ${darkMode ? 'dark-mode' : ''}`}>
+      {/* 隐藏的摄像头元素 */}
+      <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+      {/* 摄像头错误提示 */}
+      {cameraError && (
+        <div className="camera-error-toast">
+          摄像头: {cameraError}
+        </div>
+      )}
+
       {/* 顶部导航 */}
       <header className="home-header">
         <div className="header-brand">
@@ -193,6 +222,14 @@ const Chat = () => {
           <button className="nav-btn" onClick={() => navigate('/profile')}>
             我的
           </button>
+          <button
+            className={`camera-toggle-btn ${cameraEnabled ? 'active' : ''}`}
+            onClick={toggleCamera}
+            title={cameraEnabled ? '关闭表情识别' : '开启表情识别'}
+          >
+            <span className="camera-icon">📷</span>
+            <span className="camera-status-dot" style={{ background: cameraEnabled ? '#4CAF50' : '#999' }} />
+          </button>
           <button className="mode-toggle-btn" onClick={toggleDarkMode} aria-label={darkMode ? '切换到白天模式' : '切换到夜间模式'}>
             <span className={`mode-icon iconfont ${darkMode ? 'icon-taiyang' : 'icon-ansemoshi'}`}></span>
           </button>
@@ -203,10 +240,19 @@ const Chat = () => {
         {/* 左侧 - 数字人展示区 */}
         <div className="avatar-section">
           <div className="avatar-wrapper">
-            <DigitalAvatar
-              emotion={currentEmotion}
-              isTyping={isTyping}
-            />
+            {live2dFailed ? (
+              <DigitalAvatar
+                emotion={currentEmotion}
+                isTyping={isTyping}
+              />
+            ) : (
+              <Live2DAvatar
+                emotion={currentEmotion}
+                companionStatus={companionStatus}
+                isTyping={isTyping}
+                onError={() => setLive2dFailed(true)}
+              />
+            )}
           </div>
           <div className="avatar-status">
             <span className={`status-dot ${isTyping ? 'typing' : 'online'}`}></span>
@@ -259,7 +305,41 @@ const Chat = () => {
         {/* 右侧 - 对话区 */}
         <div className="chat-section">
           <div className="chat-header">
-            <h3>对话记录</h3>
+            <div className="chat-header-left">
+              <h3>对话记录</h3>
+              <div className="chat-mode-wrapper" ref={modePanelRef}>
+                <div
+                  className="chat-mode-indicator"
+                  style={{ borderColor: CHAT_MODES[chatMode]?.color }}
+                  onClick={() => setShowModePanel(!showModePanel)}
+                >
+                  <span className="mode-icon">{CHAT_MODES[chatMode]?.icon}</span>
+                  <span className="mode-name">{CHAT_MODES[chatMode]?.name}</span>
+                  <span className="mode-arrow">{showModePanel ? '▲' : '▼'}</span>
+                </div>
+                {showModePanel && (
+                  <div className="chat-mode-panel">
+                    {CHAT_MODE_LIST.map(mode => (
+                      <div
+                        key={mode.id}
+                        className={`mode-card ${chatMode === mode.id ? 'active' : ''}`}
+                        style={{ '--mode-color': mode.color }}
+                        onClick={() => {
+                          setChatMode(mode.id);
+                          setShowModePanel(false);
+                        }}
+                      >
+                        <span className="mode-card-icon">{mode.icon}</span>
+                        <div className="mode-card-info">
+                          <span className="mode-card-name">{mode.name}</span>
+                          <span className="mode-card-desc">{mode.description}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
             <button className="clear-btn" onClick={handleClearHistory}>
               清空记录
             </button>
@@ -284,6 +364,7 @@ const Chat = () => {
                       message={msg.response}
                       isUser={false}
                       emotion={msg.emotion || 'gentle'}
+                      emotionAdvice={msg.emotion_advice}
                     />
                   )}
                 </React.Fragment>
@@ -300,25 +381,19 @@ const Chat = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="chat-input-area">
-            <div className="mode-toggle">
-              <button
-                className={`mode-btn ${chatMode === 'normal' ? 'active' : ''}`}
-                onClick={() => setChatMode('normal')}
-              >
-                普通模式
-              </button>
-              <button
-                className={`mode-btn vip ${chatMode === 'vip' ? 'active' : ''}`}
-                onClick={() => setChatMode('vip')}
-              >
-                <span className="vip-crown">👑</span> VIP模式
-              </button>
+          {/* 情绪调节建议卡片 */}
+          {latestAdvice && (
+            <div className="emotion-advice-card">
+              <span className="advice-icon">💡</span>
+              <span className="advice-text">{latestAdvice}</span>
             </div>
+          )}
+
+          <div className="chat-input-area">
             <div className="input-wrapper">
               <textarea
                 className="chat-input"
-                placeholder="输入你想说的话..."
+                placeholder={CHAT_MODES[chatMode]?.placeholder || '输入你想说的话...'}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}

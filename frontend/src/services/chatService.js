@@ -5,8 +5,12 @@ import request from '../utils/request';
  */
 export const chatApi = {
   // 发送消息
-  sendMessage: (message, mode = 'normal') => {
-    return request.post('/chat/message', { message, mode });
+  sendMessage: (message, facialImage, mode = 'normal') => {
+    const data = { message, mode };
+    if (facialImage) {
+      data.facial_image = facialImage;
+    }
+    return request.post('/chat/message', data);
   },
 
   // 获取对话历史

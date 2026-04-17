@@ -12,6 +12,7 @@ import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Diary from './pages/Diary';
 
 /**
  * 受保护的路由组件
@@ -132,6 +133,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Chat />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* 情绪日记 - 需要登录 */}
+        <Route 
+          path="/diary" 
+          element={
+            <ProtectedRoute>
+              <Diary />
             </ProtectedRoute>
           } 
         />

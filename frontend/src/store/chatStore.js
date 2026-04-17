@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { userApi } from '../services/userService';
 import { persist } from 'zustand/middleware';
 
 /**
@@ -16,6 +17,12 @@ export const useChatStore = create(
       chatMode: 'normal', // 聊天模式：'normal' 或 'vip'
       /** 左侧「我的状态」，类似微信状态，与 AI 表情独立 */
       companionStatus: 'thinking',
+      // 数字人个性化设置
+      companionSettings: {
+        companion_name: '小伴',
+        companion_personality: 'warm',
+        chat_style: 'friendly'
+      },
 
       // Actions
       addMessage: (message) => {
@@ -54,6 +61,32 @@ export const useChatStore = create(
 
       setChatMode: (mode) => {
         set({ chatMode: mode });
+      },
+
+      // 加载数字人设置
+      loadCompanionSettings: async () => {
+        try {
+          const res = await userApi.getCompanionSettings();
+          if (res && res.data) {
+            set({ companionSettings: res.data });
+          }
+        } catch (error) {
+          console.error('加载数字人设置失败:', error);
+        }
+      },
+
+      // 更新数字人设置
+      updateCompanionSettings: async (settings) => {
+        try {
+          const res = await userApi.updateCompanionSettings(settings);
+          if (res && res.data) {
+            set({ companionSettings: res.data });
+          }
+          return res;
+        } catch (error) {
+          console.error('更新数字人设置失败:', error);
+          throw error;
+        }
       },
 
       // 更新消息（用于接收AI回复）

@@ -768,3 +768,253 @@
         height: calc(100vh - 300px);
     }
 }
+
+/* 摄像头开关按钮 */
+.camera-toggle-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.camera-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.camera-toggle-btn.active {
+    background: rgba(76, 175, 80, 0.2);
+}
+
+.camera-icon {
+    font-size: 18px;
+}
+
+.camera-status-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.camera-error-toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    background: #ff5252;
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 1000;
+    animation: fadeInOut 3s forwards;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* 情绪调节建议卡片 */
+.emotion-advice-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 16px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(124, 92, 252, 0.08), rgba(100, 181, 246, 0.08));
+    border-radius: 12px;
+    border-left: 3px solid #7c5cfc;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.advice-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.advice-text {
+    font-size: 13px;
+    color: var(--text-secondary, #666);
+    line-height: 1.4;
+}
+
+/* ==================== 模式切换UI样式 ==================== */
+
+/* 模式选择器容器 */
+.chat-mode-wrapper {
+    position: relative;
+}
+
+/* 模式指示器 */
+.chat-mode-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: var(--bg-secondary, #f5f5f5);
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    user-select: none;
+}
+
+.chat-mode-indicator:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mode-icon {
+    font-size: 1.1rem;
+}
+
+.mode-name {
+    font-weight: 600;
+}
+
+.mode-arrow {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+/* 模式选择面板 */
+.chat-mode-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 100;
+    background: var(--bg-primary, #fff);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px;
+    animation: slideDown 0.2s ease-out;
+    min-width: 280px;
+    max-width: 420px;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mode-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.mode-card:hover {
+    background: var(--bg-secondary, #f5f5f5);
+}
+
+.mode-card.active {
+    border-color: var(--mode-color);
+    background: color-mix(in srgb, var(--mode-color) 8%, transparent);
+}
+
+.mode-card-icon {
+    font-size: 1.5rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--mode-color) 12%, transparent);
+    flex-shrink: 0;
+}
+
+.mode-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mode-card-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.mode-card-desc {
+    font-size: 0.72rem;
+    opacity: 0.6;
+    color: var(--text-secondary);
+}
+
+/* 头部左侧布局 */
+.chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 深色模式适配 */
+.home-page.dark-mode .chat-mode-panel {
+    background: #1e1e2e;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.home-page.dark-mode .chat-mode-indicator {
+    background: #2a2a3e;
+    color: #e0e0e0;
+}
+
+.home-page.dark-mode .mode-card:hover {
+    background: #2a2a3e;
+}
+
+.home-page.dark-mode .mode-card-name {
+    color: #e0e0e0;
+}
+
+.home-page.dark-mode .mode-card-desc {
+    color: #a0a0a0;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .chat-mode-panel {
+        grid-template-columns: 1fr;
+        min-width: 240px;
+        left: 0;
+    }
+
+    .chat-header-left {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .chat-mode-indicator {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+}

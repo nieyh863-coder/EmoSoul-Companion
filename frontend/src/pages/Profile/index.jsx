@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import AvatarCropper from '../../components/AvatarCropper';
 import { userApi } from '../../services/userService';
 import { authApi } from '../../services/authService';
 import { useAuthStore } from '../../store/authStore';
+import { useChatStore } from '../../store/chatStore';
 import useThemeStore from '../../store/themeStore';
 import { validator } from '../../utils/validator';
 import './Profile.css';
@@ -21,7 +22,9 @@ document.head.appendChild(link);
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuthStore();
+  const { companionSettings, loadCompanionSettings, updateCompanionSettings } = useChatStore();
   const fileInputRef = useRef(null);
+  const debounceTimerRef = useRef(null);
   
   const [nickname, setNickname] = useState('');
   const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -33,9 +36,27 @@ const Profile = () => {
     newPassword: ''
   });
   const [loading, setLoading] = useState(false);
+  const [localCompanionName, setLocalCompanionName] = useState('');
 
   // 从全局主题状态获取
   const { darkMode, toggleDarkMode } = useThemeStore();
+
+  // 数字人性格选项
+  const personalities = [
+    { value: 'lively', label: '活泼', desc: '充满活力，俏皮可爱', icon: '🌟' },
+    { value: 'calm', label: '沉稳', desc: '温和内敛，善于倾听', icon: '🌊' },
+    { value: 'humorous', label: '幽默', desc: '风趣诩谐，轻松愉快', icon: '😄' },
+    { value: 'warm', label: '温暖', desc: '善解人意，充满关怀', icon: '🌸' },
+    { value: 'wise', label: '睿智', desc: '博学多才，深刻洞察', icon: '📚' },
+  ];
+
+  // 对话风格选项
+  const chatStyles = [
+    { value: 'professional', label: '专业', desc: '严谨准确，条理清晰', icon: '💼' },
+    { value: 'friendly', label: '亲和', desc: '亲切友好，自然轻松', icon: '🤝' },
+    { value: 'literary', label: '文艺', desc: '优美浪漫，诗意表达', icon: '🎨' },
+    { value: 'casual', label: '日常', desc: '轻松随意，口语化', icon: '☕' },
+  ];
 
   // 初始化用户信息
   useEffect(() => {
@@ -60,6 +81,25 @@ const Profile = () => {
     
     loadUserInfo();
   }, [updateUser]);
+
+  // 加载数字人设置
+  useEffect(() => {
+    loadCompanionSettings();
+  }, [loadCompanionSettings]);
+
+  // 同步 companionSettings 到本地名称状态
+  useEffect(() => {
+    setLocalCompanionName(companionSettings.companion_name || '');
+  }, [companionSettings.companion_name]);
+
+  // 组件卸载时清除防抖定时器
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // 修改昵称
   const handleUpdateNickname = async () => {
@@ -173,6 +213,32 @@ const Profile = () => {
       setLoading(false);
     }
   };
+
+  // 数字人名称修改（防抖500ms）
+  const handleNameChange = useCallback((value) => {
+    setLocalCompanionName(value);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        await updateCompanionSettings({ companion_name: value });
+        toast.success('名称已保存');
+      } catch (error) {
+        toast.error('保存失败，请重试');
+      }
+    }, 500);
+  }, [updateCompanionSettings]);
+
+  // 数字人设置选项修改
+  const handleSettingChange = useCallback(async (key, value) => {
+    try {
+      await updateCompanionSettings({ [key]: value });
+      toast.success('设置已保存');
+    } catch (error) {
+      toast.error('保存失败，请重试');
+    }
+  }, [updateCompanionSettings]);
 
   // 退出登录
   const handleLogout = async () => {
@@ -320,6 +386,59 @@ const Profile = () => {
               <span className="btn-icon iconfont icon-tuichudenglu"></span>
               退出登录
             </button>
+          </div>
+        </div>
+
+        {/* 数字人设置区域 */}
+        <div className="companion-settings-section">
+          <h3 className="section-title">数字人设置</h3>
+
+          {/* 名称输入 */}
+          <div className="setting-group">
+            <label>数字人名称</label>
+            <input
+              type="text"
+              value={localCompanionName}
+              onChange={(e) => handleNameChange(e.target.value)}
+              placeholder="给你的数字人起个名字"
+              maxLength={32}
+            />
+          </div>
+
+          {/* 性格选择 */}
+          <div className="setting-group">
+            <label>性格设定</label>
+            <div className="option-cards">
+              {personalities.map(p => (
+                <div
+                  key={p.value}
+                  className={`option-card ${companionSettings.companion_personality === p.value ? 'active' : ''}`}
+                  onClick={() => handleSettingChange('companion_personality', p.value)}
+                >
+                  <span className="option-icon">{p.icon}</span>
+                  <span className="option-name">{p.label}</span>
+                  <span className="option-desc">{p.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 对话风格选择 */}
+          <div className="setting-group">
+            <label>对话风格</label>
+            <div className="option-cards">
+              {chatStyles.map(s => (
+                <div
+                  key={s.value}
+                  className={`option-card ${companionSettings.chat_style === s.value ? 'active' : ''}`}
+                  onClick={() => handleSettingChange('chat_style', s.value)}
+                >
+                  <span className="option-icon">{s.icon}</span>
+                  <span className="option-name">{s.label}</span>
+                  <span className="option-desc">{s.desc}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
