@@ -176,6 +176,46 @@ class UserService {
 
         return true;
     }
+
+    /**
+     * 获取数字人设置
+     */
+    static async getCompanionSettings(userId) {
+        const settings = await UserModel.getCompanionSettings(userId);
+        if (!settings) {
+            throw { status: 404, message: '用户不存在' };
+        }
+        return {
+            companion_name: settings.companion_name || '小伴',
+            companion_personality: settings.companion_personality || 'warm',
+            chat_style: settings.chat_style || 'friendly'
+        };
+    }
+
+    /**
+     * 更新数字人设置
+     */
+    static async updateCompanionSettings(userId, settings) {
+        // 验证性格值
+        const validPersonalities = ['lively', 'calm', 'humorous', 'warm', 'wise'];
+        if (settings.companion_personality && !validPersonalities.includes(settings.companion_personality)) {
+            throw { status: 400, message: '无效的性格设定' };
+        }
+
+        // 验证对话风格
+        const validStyles = ['professional', 'friendly', 'literary', 'casual'];
+        if (settings.chat_style && !validStyles.includes(settings.chat_style)) {
+            throw { status: 400, message: '无效的对话风格' };
+        }
+
+        // 验证名称长度
+        if (settings.companion_name && settings.companion_name.length > 32) {
+            throw { status: 400, message: '数字人名称不能超过32个字符' };
+        }
+
+        await UserModel.updateCompanionSettings(userId, settings);
+        return await UserModel.getCompanionSettings(userId);
+    }
 }
 
 module.exports = UserService;

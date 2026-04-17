@@ -11,6 +11,7 @@ const loggerMiddleware = require('./middleware/logger');
 const corsMiddleware = require('./middleware/cors');
 const JWTUtil = require('./utils/jwt');
 const ConversationModel = require('./models/conversationModel');
+const ProactiveService = require('./services/proactiveService');
 
 const app = new Koa();
 const PORT = process.env.PORT || 3001;
@@ -68,6 +69,16 @@ async function startServer() {
                 console.error('[定时清理] 清理过期对话失败:', err.message);
             }
         }, 24 * 60 * 60 * 1000);
+
+        // 主动消息定时任务 - 每30分钟检查一次
+        setInterval(async () => {
+            await ProactiveService.checkAndSendProactiveMessages();
+        }, 30 * 60 * 1000);
+
+        // 启动后延迟1分钟执行第一次检查
+        setTimeout(async () => {
+            await ProactiveService.checkAndSendProactiveMessages();
+        }, 60 * 1000);
 
         // 启动服务
         app.listen(PORT, () => {
