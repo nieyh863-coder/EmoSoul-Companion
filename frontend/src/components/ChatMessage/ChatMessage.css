@@ -124,3 +124,57 @@
         font-size: 11px;
     }
 }
+
+/* 情绪标签 */
+.emotion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.emotion-happy { background: rgba(255, 215, 0, 0.15); color: #F59E0B; }
+.emotion-sad { background: rgba(100, 181, 246, 0.15); color: #3B82F6; }
+.emotion-angry { background: rgba(255, 82, 82, 0.15); color: #EF4444; }
+.emotion-surprised { background: rgba(255, 152, 0, 0.15); color: #F97316; }
+.emotion-anxious { background: rgba(255, 193, 7, 0.15); color: #EAB308; }
+.emotion-calm { background: rgba(129, 199, 132, 0.15); color: #22C55E; }
+.emotion-thinking { background: rgba(206, 147, 216, 0.15); color: #A855F7; }
+.emotion-love { background: rgba(244, 143, 177, 0.15); color: #EC4899; }
+
+/* 主动关怀标识 */
+.proactive-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    background: linear-gradient(135deg, rgba(244, 143, 177, 0.15), rgba(206, 147, 216, 0.15));
+    border-radius: 12px;
+    margin-bottom: 6px;
+    border: 1px solid rgba(244, 143, 177, 0.2);
+}
+
+.proactive-icon {
+    font-size: 12px;
+}
+
+.proactive-text {
+    font-size: 11px;
+    font-weight: 500;
+    color: #E91E63;
+    letter-spacing: 0.5px;
+}
+
+.message-advice {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: rgba(124, 92, 252, 0.06);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-secondary, #888);
+    line-height: 1.4;
+}

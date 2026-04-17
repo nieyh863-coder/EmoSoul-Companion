@@ -1,23 +1,31 @@
 import React, { useEffect, useState, useRef } from 'react';
+import avatarLook from '../../assets/images/avatar-look.png';
 import avatarSurprised from '../../assets/images/avatar-surprised.png';
 import avatarSad from '../../assets/images/avatar-sad.png';
 import avatarThinking from '../../assets/images/avatar-thinking.png';
 import '../../styles/Avatar.css';
 
-const avatarImages = {
-    surprised: avatarSurprised,
-    sad: avatarSad,
-    thinking: avatarThinking
+// 8种情绪到头像图片和粒子颜色的映射
+const emotionAvatarMap = {
+    happy: { image: avatarLook, particleColor: '#FFD700' },
+    sad: { image: avatarSad, particleColor: '#64B5F6' },
+    angry: { image: avatarSad, particleColor: '#FF5252' },
+    surprised: { image: avatarSurprised, particleColor: '#FF9800' },
+    anxious: { image: avatarThinking, particleColor: '#FFC107' },
+    calm: { image: avatarLook, particleColor: '#81C784' },
+    thinking: { image: avatarThinking, particleColor: '#CE93D8' },
+    love: { image: avatarLook, particleColor: '#F48FB1' },
 };
 
-const emotions = ['surprised', 'sad', 'thinking'];
+// 所有图片去重（用于预渲染 img 标签）
+const uniqueImages = [
+    { key: 'look', src: avatarLook },
+    { key: 'sad', src: avatarSad },
+    { key: 'surprised', src: avatarSurprised },
+    { key: 'thinking', src: avatarThinking },
+];
 
-// 调试：打印图片路径
-console.log('Avatar images paths:', {
-  surprised: avatarSurprised,
-  sad: avatarSad,
-  thinking: avatarThinking
-});
+const emotions = Object.keys(emotionAvatarMap);
 
 const DigitalAvatar = ({ emotion = 'thinking', isTyping = false }) => {
     const [currentEmotion, setCurrentEmotion] = useState(emotion);
@@ -40,6 +48,16 @@ const DigitalAvatar = ({ emotion = 'thinking', isTyping = false }) => {
             return () => clearTimeout(timer);
         }
     }, [emotion, currentEmotion, isHovering]);
+
+    // 获取当前情绪对应的图片
+    const getCurrentImage = (emo) => {
+        return (emotionAvatarMap[emo] || emotionAvatarMap.thinking).image;
+    };
+
+    // 获取当前情绪对应的粒子颜色
+    const getParticleColor = (emo) => {
+        return (emotionAvatarMap[emo] || emotionAvatarMap.thinking).particleColor;
+    };
 
     const handleMouseEnter = () => {
         setIsHovering(true);
@@ -93,9 +111,9 @@ const DigitalAvatar = ({ emotion = 'thinking', isTyping = false }) => {
             particle.style.left = `${x}%`;
             particle.style.top = `${y}%`;
             
-            // 随机颜色
-            const colors = ['rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(167, 139, 250, 0.8)'];
-            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+            // 使用当前情绪对应的粒子颜色
+            const baseColor = getParticleColor(currentEmotion);
+            particle.style.background = baseColor;
             
             // 随机大小
             const size = Math.random() * 4 + 2;
@@ -124,21 +142,25 @@ const DigitalAvatar = ({ emotion = 'thinking', isTyping = false }) => {
         }, 2000);
     };
 
+    const currentImage = getCurrentImage(currentEmotion);
+    const prevImage = getCurrentImage(prevEmotion);
+
     return (
         <div 
             className={`avatar-container ${isTyping ? 'typing' : ''} ${currentEmotion} ${isClicked ? 'clicked' : ''}`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={handleClick}
+            style={{ '--particle-color': getParticleColor(currentEmotion) }}
         >
             <div className="avatar-glow-ring" />
             <div className="avatar-image-wrapper">
-                {emotions.map(emo => (
+                {uniqueImages.map(({ key, src }) => (
                     <img
-                        key={emo}
-                        src={avatarImages[emo]}
-                        alt={`数字人${emo}表情`}
-                        className={`avatar-img ${currentEmotion === emo ? 'active' : ''} ${isTransitioning && prevEmotion === emo ? 'fading-out' : ''}`}
+                        key={key}
+                        src={src}
+                        alt={`数字人${key}表情`}
+                        className={`avatar-img ${currentImage === src ? 'active' : ''} ${isTransitioning && prevImage === src ? 'fading-out' : ''}`}
                         draggable={false}
                     />
                 ))}

@@ -1,0 +1,71 @@
+.live2d-avatar-container {
+    position: relative;
+    width: 280px;
+    height: 360px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(106, 17, 203, 0.1), rgba(37, 117, 252, 0.1));
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.live2d-avatar-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.live2d-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.live2d-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(106, 17, 203, 0.05), rgba(37, 117, 252, 0.05));
+}
+
+.live2d-loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(106, 17, 203, 0.2);
+    border-top-color: #6a11cb;
+    border-radius: 50%;
+    animation: live2d-spin 0.8s linear infinite;
+}
+
+.live2d-loading span {
+    font-size: 14px;
+    color: #6a11cb;
+}
+
+@keyframes live2d-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 深色模式 */
+[data-theme="dark"] .live2d-avatar-container {
+    background: linear-gradient(135deg, rgba(106, 17, 203, 0.2), rgba(37, 117, 252, 0.2));
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .live2d-loading span {
+    color: #b794f6;
+}
+
+[data-theme="dark"] .live2d-loading-spinner {
+    border-color: rgba(183, 148, 246, 0.2);
+    border-top-color: #b794f6;
+}
