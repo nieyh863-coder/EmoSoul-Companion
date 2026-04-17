@@ -468,16 +468,7 @@
   margin-bottom: 12px;
 }
 
-/* 放大 Live2DAvatar 在数字人页面中的显示 */
-.dh-avatar-display .live2d-avatar-container {
-  width: 360px;
-  height: 460px;
-}
-
-.dh-avatar-display .live2d-canvas {
-  width: 100%;
-  height: 100%;
-}
+/* Live2DAvatar 尺寸由组件 props 控制，此处不再强制覆盖 */
 
 .dh-avatar-status {
   text-align: center;
@@ -677,6 +668,148 @@
   overflow-y: auto;
 }
 
+/* ========== 弹窗样式 ========== */
+
+/* 弹窗遮罩 */
+.dh-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: dh-fadeIn 0.3s ease;
+}
+
+@keyframes dh-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dh-modal-dialog {
+  background: rgba(30, 30, 60, 0.95);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: dh-slideUp 0.3s ease;
+}
+
+@keyframes dh-slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dh-modal-icon-header {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.dh-modal-icon-header.loading {
+  animation: dh-spin 2s linear infinite;
+}
+
+@keyframes dh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.dh-modal-dialog h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.dh-modal-dialog p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.dh-modal-hint {
+  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.dh-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dh-modal-actions .dh-btn-primary {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.dh-modal-actions .dh-btn-secondary {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dh-modal-actions .dh-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dh-modal-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 13px;
+}
+
+/* 加载进度 */
+.dh-loading-progress {
+  margin-top: 20px;
+}
+
+.dh-loading-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.dh-loading-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8B5CF6, #EC4899);
+  border-radius: 3px;
+  transition: width 1s linear;
+}
+
+.dh-loading-time {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dh-cancel-btn {
+  margin-top: 16px;
+  width: 100%;
+}
+
 /* ========== 响应式适配 ========== */
 @media (max-width: 1200px) {
   .dh-content {
@@ -703,8 +836,8 @@
   }
 
   .dh-avatar-display .live2d-avatar-container {
-    width: 280px;
-    height: 360px;
+    width: 280px !important;
+    height: 360px !important;
   }
 }
 
@@ -732,8 +865,8 @@
   }
 
   .dh-avatar-display .live2d-avatar-container {
-    width: 240px;
-    height: 310px;
+    width: 240px !important;
+    height: 310px !important;
   }
 
   .dh-expression-row {

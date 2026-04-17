@@ -1,7 +1,6 @@
 .live2d-avatar-container {
     position: relative;
-    width: 280px;
-    height: 360px;
+    /* width/height 由组件 props 通过 inline style 控制 */
     border-radius: 20px;
     overflow: hidden;
     background: linear-gradient(135deg, rgba(106, 17, 203, 0.1), rgba(37, 117, 252, 0.1));

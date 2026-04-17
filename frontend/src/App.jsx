@@ -12,7 +12,7 @@ import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Diary from './pages/Diary';
+import DailyManagement from './pages/DailyManagement';
 import Todo from './pages/Todo';
 import Social from './pages/Social';
 import Achievement from './pages/Achievement';
@@ -142,12 +142,12 @@ function App() {
           } 
         />
         
-        {/* 情绪日记 - 需要登录 */}
+        {/* 日常管理 - 需要登录 */}
         <Route 
-          path="/diary" 
+          path="/home/daily-management" 
           element={
             <ProtectedRoute>
-              <Diary />
+              <DailyManagement />
             </ProtectedRoute>
           } 
         />

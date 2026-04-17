@@ -10,13 +10,20 @@ const MODEL_URLS = [
 // 全局单例
 let globalApp = null;
 let globalModel = null;
+let globalCanvas = null;  // 记录当前 App 绑定的 canvas
 let initPromise = null;
 let refCount = 0;
 
 async function initLive2D(canvas, width, height) {
-    // 如果已初始化，直接返回
+    // 如果已初始化，检查 canvas 是否一致
     if (globalModel && globalApp) {
-        return { app: globalApp, model: globalModel };
+        if (globalCanvas === canvas) {
+            // 同一个 canvas，直接复用
+            return { app: globalApp, model: globalModel };
+        }
+        // canvas 变了（页面切换），必须销毁旧实例重建
+        console.log('[Live2D] Canvas 变更，销毁旧实例重建');
+        destroyLive2D();
     }
 
     // 如果正在初始化，等待
@@ -55,6 +62,9 @@ async function initLive2D(canvas, width, height) {
             });
 
             console.log('PIXI Application 创建成功');
+
+            // 记录当前 canvas
+            globalCanvas = canvas;
 
             // 尝试加载模型
             let model = null;
@@ -110,6 +120,7 @@ function destroyLive2D() {
         try { globalApp.destroy(false); } catch(e) {}
         globalApp = null;
     }
+    globalCanvas = null;
     initPromise = null;
 }
 

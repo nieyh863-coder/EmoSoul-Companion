@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useDiaryStore from '../../store/diaryStore';
 import useThemeStore from '../../store/themeStore';
-import './Diary.css';
+import './DailyManagement.css';
 
 // 情绪配置
 const EMOTIONS = [
@@ -20,9 +20,9 @@ const EMOTIONS = [
 const getEmotionConfig = (key) => EMOTIONS.find(e => e.key === key) || EMOTIONS[5];
 
 /**
- * 情绪日记页面
+ * 日常管理页面
  */
-const Diary = () => {
+const DailyManagement = () => {
   const navigate = useNavigate();
   const { calendarData, stats, isLoading, currentMonth, loadCalendar, loadStats, createEntry, setMonth } = useDiaryStore();
   const { darkMode, toggleDarkMode } = useThemeStore();
@@ -160,7 +160,7 @@ const Diary = () => {
         </div>
         <nav className="header-nav">
           <button className="nav-btn" onClick={() => navigate('/home')}>对话</button>
-          <button className="nav-btn active">日记</button>
+          <button className="nav-btn active">日常管理</button>
           <button className="nav-btn" onClick={() => navigate('/profile')}>我的</button>
           <button className="mode-toggle-btn" onClick={toggleDarkMode} aria-label={darkMode ? '切换到白天模式' : '切换到夜间模式'}>
             <span className={`mode-icon iconfont ${darkMode ? 'icon-taiyang' : 'icon-ansemoshi'}`}></span>
@@ -283,4 +283,4 @@ const Diary = () => {
   );
 };
 
-export default Diary;
+export default DailyManagement;

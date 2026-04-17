@@ -72,7 +72,8 @@ const Home = () => {
       title: '日常管理',
       description: '提供日程提醒、待办事项和习惯养成功能',
       icon: '📅',
-      color: 'feature-daily'
+      color: 'feature-daily',
+      route: '/home/daily-management'
     },
     {
       id: 5,

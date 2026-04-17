@@ -362,11 +362,11 @@ const EMOTION_MOTION_MAP = {
     love: { group: 'TapBody', index: 0 }         // 心动反应
 };
 
-function Live2DAvatar({ emotion = 'calm', companionStatus, isTyping = false, onError }) {
+function Live2DAvatar({ emotion = 'calm', companionStatus, isTyping = false, onError, width = 280, height = 360 }) {
     const canvasRef = useRef(null);
     const { isLoaded, loadError, setExpressionByParams, playMotion, setFocus } = useLive2D(canvasRef, {
-        width: 280,
-        height: 360,
+        width,
+        height,
     });
 
     // 加载失败时通知父组件
@@ -565,6 +565,7 @@ function Live2DAvatar({ emotion = 'calm', companionStatus, isTyping = false, onE
     return (
         <div
             className="live2d-avatar-container"
+            style={{ width: `${width}px`, height: `${height}px` }}
             onMouseMove={handleMouseMove}
             onClick={handleClick}
             onDoubleClick={handleDoubleClick}

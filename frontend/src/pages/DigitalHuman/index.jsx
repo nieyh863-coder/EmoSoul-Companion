@@ -58,9 +58,12 @@ const DigitalHuman = () => {
   const [selectedPose, setSelectedPose] = useState('greeting');
 
   // 服务状态
-  const [serviceStatus, setServiceStatus] = useState('unknown'); // unknown, ready, local, error
+  const [serviceStatus, setServiceStatus] = useState('checking'); // checking, unknown, ready, local, loading, error
+  const [useLocalMode, setUseLocalMode] = useState(false);
+  const [loadingTime, setLoadingTime] = useState(0);
   const [emotionServiceStarted, setEmotionServiceStarted] = useState(false);
   const [asrEnabled, setAsrEnabled] = useState(false);
+  const loadingTimerRef = useRef(null);
 
   // 三模情绪
   const [videoEmotion, setVideoEmotion] = useState(null);
@@ -79,20 +82,75 @@ const DigitalHuman = () => {
   const pollTimerRef = useRef(null);
 
   // 检查服务状态
+  const checkServiceStatus = useCallback(async () => {
+    try {
+      const res = await emotionAnalysisApi.checkHealth();
+      if (res && res.code === 200 && res.data?.status === 'ok') {
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
-    const check = async () => {
-      try {
-        const res = await emotionAnalysisApi.checkHealth();
-        if (res && res.code === 200 && res.data?.status === 'ok') {
-          setServiceStatus('ready');
-        } else {
-          setServiceStatus('unknown');
-        }
-      } catch {
+    const init = async () => {
+      setServiceStatus('checking');
+      const ready = await checkServiceStatus();
+      if (ready) {
+        setServiceStatus('ready');
+        setUseLocalMode(false);
+      } else {
         setServiceStatus('unknown');
       }
     };
-    check();
+    init();
+
+    return () => {
+      if (loadingTimerRef.current) clearInterval(loadingTimerRef.current);
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, [checkServiceStatus]);
+
+  // 自动启动 Python 推理服务
+  const startInferenceService = useCallback(async () => {
+    setServiceStatus('loading');
+    setLoadingTime(0);
+
+    loadingTimerRef.current = setInterval(() => {
+      setLoadingTime(prev => prev + 1);
+    }, 1000);
+
+    try {
+      await emotionAnalysisApi.startService();
+      const maxRetries = 60;
+      for (let i = 0; i < maxRetries; i++) {
+        await new Promise(r => setTimeout(r, 1000));
+        const ready = await checkServiceStatus();
+        if (ready) {
+          clearInterval(loadingTimerRef.current);
+          setServiceStatus('ready');
+          setUseLocalMode(false);
+          toast.success('情绪识别服务已就绪');
+          return;
+        }
+      }
+      clearInterval(loadingTimerRef.current);
+      setServiceStatus('error');
+      toast.error('服务启动超时，请检查 Python 环境');
+    } catch {
+      clearInterval(loadingTimerRef.current);
+      setServiceStatus('error');
+      toast.error('服务启动失败，请使用本地模拟模式');
+    }
+  }, [checkServiceStatus]);
+
+  // 使用本地模拟模式
+  const useLocalModeHandler = useCallback(() => {
+    setServiceStatus('local');
+    setUseLocalMode(true);
+    toast.success('已切换到本地模拟模式', { icon: '🖥️' });
   }, []);
 
   // 表情按钮点击
@@ -130,42 +188,66 @@ const DigitalHuman = () => {
     }
   }, [isMonitoring, cameraEnabled, startCamera, stopCamera]);
 
+  // 后端情绪分析
+  const analyzeFrame = useCallback(async () => {
+    if (!latestFrame) return;
+    try {
+      const res = await emotionAnalysisApi.analyzeFrame({ image: latestFrame });
+      if (res.code === 200 && res.data) {
+        const data = res.data;
+        if (data.video_emotion) {
+          setVideoEmotion({ emotion: data.video_emotion, confidence: data.video_confidence || 0 });
+        }
+        if (data.fused_emotion) {
+          setFusedEmotion({ emotion: data.fused_emotion, confidence: data.fused_confidence || 0 });
+          const emotionMap = {
+            neutral: 'calm', happy: 'happy', sad: 'sad',
+            surprise: 'surprised', fear: 'anxious', angry: 'angry',
+          };
+          const mappedEmotion = emotionMap[data.fused_emotion] || 'calm';
+          setCurrentEmotion(mappedEmotion);
+          setAvatarStatus(mappedEmotion.toUpperCase());
+        }
+      }
+    } catch (err) {
+      console.error('情绪分析失败:', err);
+    }
+  }, [latestFrame]);
+
+  // 本地模拟情绪分析
+  const localAnalyzeFrame = useCallback(() => {
+    if (!latestFrame) return;
+    const emotions = ['neutral', 'happy', 'sad', 'surprise', 'fear', 'angry'];
+    const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+    const confidence = parseFloat((Math.random() * 0.4 + 0.3).toFixed(4));
+
+    setVideoEmotion({ emotion: randomEmotion, confidence });
+    setFusedEmotion({ emotion: randomEmotion, confidence });
+
+    const emotionMap = {
+      neutral: 'calm', happy: 'happy', sad: 'sad',
+      surprise: 'surprised', fear: 'anxious', angry: 'angry',
+    };
+    const mappedEmotion = emotionMap[randomEmotion] || 'calm';
+    setCurrentEmotion(mappedEmotion);
+    setAvatarStatus(mappedEmotion.toUpperCase());
+  }, [latestFrame]);
+
   // 监测时定时分析
   useEffect(() => {
     if (isMonitoring && latestFrame) {
-      const analyze = async () => {
-        try {
-          const res = await emotionAnalysisApi.analyzeFrame({ image: latestFrame });
-          if (res.code === 200 && res.data) {
-            const data = res.data;
-            if (data.video_emotion) {
-              setVideoEmotion({
-                emotion: data.video_emotion,
-                confidence: data.video_confidence || 0,
-              });
-            }
-            if (data.fused_emotion) {
-              setFusedEmotion({
-                emotion: data.fused_emotion,
-                confidence: data.fused_confidence || 0,
-              });
-              // 联动 Live2D 表情
-              const emotionMap = {
-                neutral: 'calm', happy: 'happy', sad: 'sad',
-                surprise: 'surprised', fear: 'anxious', angry: 'angry',
-              };
-              const mappedEmotion = emotionMap[data.fused_emotion] || 'calm';
-              setCurrentEmotion(mappedEmotion);
-              setAvatarStatus(mappedEmotion.toUpperCase());
-            }
-          }
-        } catch (err) {
-          console.error('情绪分析失败:', err);
+      if (useLocalMode) {
+        localAnalyzeFrame();
+      } else {
+        analyzeFrame();
+      }
+      pollTimerRef.current = setInterval(() => {
+        if (useLocalMode) {
+          localAnalyzeFrame();
+        } else {
+          analyzeFrame();
         }
-      };
-
-      analyze();
-      pollTimerRef.current = setInterval(analyze, 3000);
+      }, 3000);
     }
 
     return () => {
@@ -174,7 +256,7 @@ const DigitalHuman = () => {
         pollTimerRef.current = null;
       }
     };
-  }, [isMonitoring, latestFrame]);
+  }, [isMonitoring, latestFrame, useLocalMode, analyzeFrame, localAnalyzeFrame]);
 
   // 发送聊天消息
   const handleSendMessage = useCallback(async () => {
@@ -270,10 +352,60 @@ const DigitalHuman = () => {
         <h1 className="dh-title">🤖 多模态AI数字人测试平台</h1>
         <div className="dh-header-actions">
           <span className={`dh-connection-badge ${serviceStatus === 'ready' ? 'connected' : serviceStatus === 'local' ? 'local' : ''}`}>
-            {serviceStatus === 'ready' ? '服务已就绪' : serviceStatus === 'local' ? '本地模式' : '未连接'}
+            {serviceStatus === 'ready' ? '服务已就绪' : serviceStatus === 'local' ? '本地模式' : serviceStatus === 'loading' ? '加载中...' : serviceStatus === 'checking' ? '检测中...' : '未连接'}
           </span>
         </div>
       </header>
+
+      {/* 服务选择弹窗 */}
+      {(serviceStatus === 'unknown' || serviceStatus === 'error') && (
+        <div className="dh-modal-overlay">
+          <div className="dh-modal-dialog">
+            <div className="dh-modal-icon-header">🤖</div>
+            <h3>情绪识别服务</h3>
+            <p>首次使用需启动 Python 推理服务（加载 DeepFace 模型约需 20~40 秒）</p>
+            <p className="dh-modal-hint">
+              如果后端服务不可用，也可以使用本地模拟模式进行体验
+            </p>
+            {serviceStatus === 'error' && (
+              <div className="dh-modal-error">
+                服务启动失败，建议使用本地模拟模式
+              </div>
+            )}
+            <div className="dh-modal-actions">
+              <button className="dh-btn dh-btn-primary" onClick={startInferenceService}>
+                ▶ 自动启动服务
+              </button>
+              <button className="dh-btn dh-btn-secondary" onClick={useLocalModeHandler}>
+                🖥 使用本地模拟
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 加载中弹窗 */}
+      {serviceStatus === 'loading' && (
+        <div className="dh-modal-overlay">
+          <div className="dh-modal-dialog">
+            <div className="dh-modal-icon-header loading">⏳</div>
+            <h3>正在加载模型...</h3>
+            <p>正在启动 Python 推理服务，请耐心等待</p>
+            <div className="dh-loading-progress">
+              <div className="dh-loading-bar">
+                <div
+                  className="dh-loading-fill"
+                  style={{ width: `${Math.min(100, (loadingTime / 40) * 100)}%` }}
+                />
+              </div>
+              <span className="dh-loading-time">已等待 {loadingTime}s</span>
+            </div>
+            <button className="dh-btn dh-btn-secondary dh-cancel-btn" onClick={useLocalModeHandler}>
+              取消，使用本地模拟
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 主体内容 - 三栏布局 */}
       <div className="dh-content">
@@ -287,14 +419,14 @@ const DigitalHuman = () => {
             <div className="dh-service-status-list">
               <div className="dh-service-item">
                 <span className="dh-service-name">Python 情绪识别服务</span>
-                <span className={`dh-service-badge ${serviceStatus === 'ready' ? 'online' : 'offline'}`}>
-                  {serviceStatus === 'ready' ? '已启动' : '未启动'}
+                <span className={`dh-service-badge ${serviceStatus === 'ready' ? 'online' : serviceStatus === 'local' ? 'online' : 'offline'}`}>
+                  {serviceStatus === 'ready' ? '已启动' : serviceStatus === 'local' ? '本地模式' : '未启动'}
                 </span>
               </div>
               <div className="dh-service-item">
                 <span className="dh-service-name">服务状态</span>
-                <span className={`dh-service-badge ${serviceStatus === 'ready' ? 'online' : 'offline'}`}>
-                  {serviceStatus === 'ready' ? '已就绪' : '未就绪'}
+                <span className={`dh-service-badge ${serviceStatus === 'ready' ? 'online' : serviceStatus === 'local' ? 'online' : 'offline'}`}>
+                  {serviceStatus === 'ready' ? '已就绪' : serviceStatus === 'local' ? '已就绪' : '未就绪'}
                 </span>
               </div>
             </div>
@@ -431,6 +563,8 @@ const DigitalHuman = () => {
               <Live2DAvatar
                 emotion={currentEmotion}
                 isTyping={isSending}
+                width={360}
+                height={460}
                 onError={(err) => {
                   console.error('Live2D 加载失败:', err);
                   setAvatarEnabled(false);
